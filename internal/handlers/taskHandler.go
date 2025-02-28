@@ -71,7 +71,7 @@ func (h *Handler) PatchHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	var task taskService.Task
-	if err := json.NewDecoder(r.Body).Decode(task); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		http.Error(w, "Could not decode request", http.StatusBadRequest)
 		return
 	}
