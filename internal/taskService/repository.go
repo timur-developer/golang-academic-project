@@ -9,7 +9,7 @@ type TaskRepository interface {
 	CreateTask(task Task) (Task, error)
 	GetAllTasks() ([]Task, error)
 	UpdateTaskByID(id uint, task Task) (Task, error)
-	DeleteTaskByID(id uint) error
+	DeleteTaskByID(id uint) (Task, error)
 }
 
 type taskRepository struct {
@@ -37,15 +37,23 @@ func (r *taskRepository) GetAllTasks() ([]Task, error) {
 func (r *taskRepository) UpdateTaskByID(id uint, task Task) (Task, error) {
 	if task.TaskName != "" {
 		err := r.db.Model(&Task{}).Where("id = ?", id).Update("task_name", task.TaskName).Error
-		return task, err
+		if err != nil {
+			return Task{}, err
+		}
+		return task, nil
 	}
 	return Task{}, fmt.Errorf("Could not update task")
 }
 
-func (r *taskRepository) DeleteTaskByID(id uint) error {
+func (r *taskRepository) DeleteTaskByID(id uint) (Task, error) {
 	if id != 0 {
+		var deletedTask Task
+		r.db.First(&deletedTask, "id = ?", id)
 		err := r.db.Delete(&Task{}, id).Error
-		return err
+		if err != nil {
+			return Task{}, err
+		}
+		return deletedTask, nil
 	}
-	return fmt.Errorf("There is no task with such ID")
+	return Task{}, fmt.Errorf("There is no task with such ID")
 }
