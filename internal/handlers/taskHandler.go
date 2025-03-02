@@ -6,12 +6,6 @@ import (
 	"context"
 )
 
-type requestBody struct {
-	ID       uint    `json:"id"`
-	TaskName *string `json:"task_name"`
-	IsDone   *bool   `json:"is_done"`
-}
-
 type Handler struct {
 	Service *taskService.TaskService
 }

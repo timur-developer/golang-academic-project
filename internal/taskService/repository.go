@@ -2,7 +2,9 @@ package taskService
 
 import (
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
+	"net/http"
 )
 
 type TaskRepository interface {
@@ -21,27 +23,27 @@ func NewTaskRepository(db *gorm.DB) *taskRepository {
 }
 
 func (r *taskRepository) CreateTask(task Task) (Task, error) {
-	result := r.db.Create(&task)
-	if result.Error != nil {
-		return Task{}, result.Error
+	if err := r.db.Create(&task).Error; err != nil {
+		return Task{}, fmt.Errorf("Could not create the task: %v", err)
 	}
 	return task, nil
 }
 
 func (r *taskRepository) GetAllTasks() ([]Task, error) {
 	var tasks []Task
-	err := r.db.Find(&tasks).Error
-	return tasks, err
+	if err := r.db.Find(&tasks).Error; err != nil {
+		return []Task{}, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("Could not get tasks: %v", err))
+	}
+	return tasks, nil
 }
 
 func (r *taskRepository) UpdateTaskByID(id uint, updates map[string]interface{}) (Task, error) {
-	err := r.db.Model(&Task{}).Where("id = ?", id).Updates(updates).Error
-	if err != nil {
-		return Task{}, err
+	if err := r.db.Model(&Task{}).Where("id = ?", id).Updates(updates).Error; err != nil {
+		return Task{}, echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("Could not update the task: %v", err))
 	}
 	var updatedTask Task
-	if err = r.db.First(&updatedTask, id).Error; err != nil {
-		return Task{}, err
+	if err := r.db.First(&updatedTask, id).Error; err != nil {
+		return Task{}, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("There is no such task: %v", err))
 	}
 	return updatedTask, nil
 }
@@ -49,12 +51,13 @@ func (r *taskRepository) UpdateTaskByID(id uint, updates map[string]interface{})
 func (r *taskRepository) DeleteTaskByID(id uint) (Task, error) {
 	if id != 0 {
 		var deletedTask Task
-		r.db.First(&deletedTask, "id = ?", id)
-		err := r.db.Delete(&Task{}, id).Error
-		if err != nil {
-			return Task{}, err
+		if err := r.db.First(&deletedTask, id).Error; err != nil {
+			return Task{}, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("There is no task with such ID: %v", err))
+		}
+		if err := r.db.Delete(&Task{}, id).Error; err != nil {
+			return Task{}, echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("Could not delete the task: %v", err))
 		}
 		return deletedTask, nil
 	}
-	return Task{}, fmt.Errorf("There is no task with such ID")
+	return Task{}, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("There is no task with such ID"))
 }
