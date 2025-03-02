@@ -7,8 +7,9 @@ import (
 )
 
 type requestBody struct {
-	ID       uint   `json:"id"`
-	TaskName string `json:"task_name"`
+	ID       uint    `json:"id"`
+	TaskName *string `json:"task_name"`
+	IsDone   *bool   `json:"is_done"`
 }
 
 type Handler struct {
@@ -35,16 +36,20 @@ func (h *Handler) DeleteTasks(_ context.Context, request tasks.DeleteTasksReques
 func (h *Handler) PatchTasks(_ context.Context, request tasks.PatchTasksRequestObject) (tasks.PatchTasksResponseObject, error) {
 	taskRequest := request.Body
 
-	taskToUpdate := taskService.Task{
-		TaskName: *taskRequest.TaskName,
+	updates := make(map[string]interface{})
+	if taskRequest.TaskName != nil {
+		updates["task_name"] = *taskRequest.TaskName
+	}
+	if taskRequest.IsDone != nil {
+		updates["is_done"] = *taskRequest.IsDone
 	}
 
-	updatedTask, err := h.Service.UpdateTaskByID(*taskRequest.Id, taskToUpdate)
+	updatedTask, err := h.Service.UpdateTaskByID(*taskRequest.Id, updates)
 	if err != nil {
 		return nil, err
 	}
 	response := tasks.PatchTasks200JSONResponse{
-		Id:        taskRequest.Id,
+		Id:        &updatedTask.ID,
 		TaskName:  &updatedTask.TaskName,
 		IsDone:    &updatedTask.IsDone,
 		CreatedAt: &updatedTask.CreatedAt,

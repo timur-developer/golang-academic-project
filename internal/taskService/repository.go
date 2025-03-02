@@ -8,7 +8,7 @@ import (
 type TaskRepository interface {
 	CreateTask(task Task) (Task, error)
 	GetAllTasks() ([]Task, error)
-	UpdateTaskByID(id uint, task Task) (Task, error)
+	UpdateTaskByID(id uint, updates map[string]interface{}) (Task, error)
 	DeleteTaskByID(id uint) (Task, error)
 }
 
@@ -34,15 +34,16 @@ func (r *taskRepository) GetAllTasks() ([]Task, error) {
 	return tasks, err
 }
 
-func (r *taskRepository) UpdateTaskByID(id uint, task Task) (Task, error) {
-	if task.TaskName != "" {
-		err := r.db.Model(&Task{}).Where("id = ?", id).Update("task_name", task.TaskName).Error
-		if err != nil {
-			return Task{}, err
-		}
-		return task, nil
+func (r *taskRepository) UpdateTaskByID(id uint, updates map[string]interface{}) (Task, error) {
+	err := r.db.Model(&Task{}).Where("id = ?", id).Updates(updates).Error
+	if err != nil {
+		return Task{}, err
 	}
-	return Task{}, fmt.Errorf("Could not update task")
+	var updatedTask Task
+	if err = r.db.First(&updatedTask, id).Error; err != nil {
+		return Task{}, err
+	}
+	return updatedTask, nil
 }
 
 func (r *taskRepository) DeleteTaskByID(id uint) (Task, error) {
