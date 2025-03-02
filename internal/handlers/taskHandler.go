@@ -6,14 +6,14 @@ import (
 	"context"
 )
 
-type Handler struct {
-	Service *taskService.TaskService
+type taskHandler struct {
+	taskService *taskService.TaskService
 }
 
-func (h *Handler) DeleteTasks(_ context.Context, request tasks.DeleteTasksRequestObject) (tasks.DeleteTasksResponseObject, error) {
+func (h *taskHandler) DeleteTasks(_ context.Context, request tasks.DeleteTasksRequestObject) (tasks.DeleteTasksResponseObject, error) {
 	taskRequest := request.Body
 
-	deletedTask, err := h.Service.DeleteTaskByID(*taskRequest.Id)
+	deletedTask, err := h.taskService.DeleteTaskByID(*taskRequest.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (h *Handler) DeleteTasks(_ context.Context, request tasks.DeleteTasksReques
 	return response, nil
 }
 
-func (h *Handler) PatchTasks(_ context.Context, request tasks.PatchTasksRequestObject) (tasks.PatchTasksResponseObject, error) {
+func (h *taskHandler) PatchTasks(_ context.Context, request tasks.PatchTasksRequestObject) (tasks.PatchTasksResponseObject, error) {
 	taskRequest := request.Body
 
 	updates := make(map[string]interface{})
@@ -38,7 +38,7 @@ func (h *Handler) PatchTasks(_ context.Context, request tasks.PatchTasksRequestO
 		updates["is_done"] = *taskRequest.IsDone
 	}
 
-	updatedTask, err := h.Service.UpdateTaskByID(*taskRequest.Id, updates)
+	updatedTask, err := h.taskService.UpdateTaskByID(*taskRequest.Id, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +53,8 @@ func (h *Handler) PatchTasks(_ context.Context, request tasks.PatchTasksRequestO
 	return response, nil
 }
 
-func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (tasks.GetTasksResponseObject, error) {
-	allTasks, err := h.Service.GetAllTasks()
+func (h *taskHandler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (tasks.GetTasksResponseObject, error) {
+	allTasks, err := h.taskService.GetAllTasks()
 	if err != nil {
 		return nil, err
 	}
@@ -75,13 +75,13 @@ func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (ta
 	return response, nil
 }
 
-func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
+func (h *taskHandler) PostTasks(_ context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
 	taskRequest := request.Body
 
 	taskToCreate := taskService.Task{
 		TaskName: *taskRequest.TaskName,
 	}
-	createdTask, err := h.Service.CreateTask(taskToCreate)
+	createdTask, err := h.taskService.CreateTask(taskToCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObj
 	return response, nil
 }
 
-func NewHandler(service *taskService.TaskService) *Handler {
-	return &Handler{
-		Service: service,
+func NewTaskHandler(service *taskService.TaskService) *taskHandler {
+	return &taskHandler{
+		taskService: service,
 	}
 }
