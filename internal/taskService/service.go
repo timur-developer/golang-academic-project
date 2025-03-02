@@ -12,8 +12,8 @@ func (s *TaskService) CreateTask(task Task) (Task, error) {
 	return s.repo.CreateTask(task)
 }
 
-func (s *TaskService) GetAllTasks() ([]Task, error) {
-	return s.repo.GetAllTasks()
+func (s *TaskService) GetTaskByUserID(userID uint) ([]Task, error) {
+	return s.repo.GetTaskByUserID(userID)
 }
 
 func (s *TaskService) UpdateTaskByID(id uint, updates map[string]interface{}) (Task, error) {

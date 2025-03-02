@@ -21,10 +21,14 @@ type Task struct {
 	IsDone    *bool      `json:"is_done,omitempty"`
 	TaskName  *string    `json:"task_name,omitempty"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UserId    *uint      `json:"user_id,omitempty"`
 }
 
 // DeleteTasksJSONRequestBody defines body for DeleteTasks for application/json ContentType.
 type DeleteTasksJSONRequestBody = Task
+
+// GetTasksJSONRequestBody defines body for GetTasks for application/json ContentType.
+type GetTasksJSONRequestBody = Task
 
 // PatchTasksJSONRequestBody defines body for PatchTasks for application/json ContentType.
 type PatchTasksJSONRequestBody = Task
@@ -142,6 +146,7 @@ func (response DeleteTasks200JSONResponse) VisitDeleteTasksResponse(w http.Respo
 }
 
 type GetTasksRequestObject struct {
+	Body *GetTasksJSONRequestBody
 }
 
 type GetTasksResponseObject interface {
@@ -251,6 +256,12 @@ func (sh *strictHandler) DeleteTasks(ctx echo.Context) error {
 // GetTasks operation middleware
 func (sh *strictHandler) GetTasks(ctx echo.Context) error {
 	var request GetTasksRequestObject
+
+	var body GetTasksJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetTasks(ctx.Request().Context(), request.(GetTasksRequestObject))

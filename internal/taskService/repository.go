@@ -9,7 +9,7 @@ import (
 
 type TaskRepository interface {
 	CreateTask(task Task) (Task, error)
-	GetAllTasks() ([]Task, error)
+	GetTaskByUserID(userID uint) ([]Task, error)
 	UpdateTaskByID(id uint, updates map[string]interface{}) (Task, error)
 	DeleteTaskByID(id uint) (Task, error)
 }
@@ -29,10 +29,16 @@ func (r *taskRepository) CreateTask(task Task) (Task, error) {
 	return task, nil
 }
 
-func (r *taskRepository) GetAllTasks() ([]Task, error) {
+func (r *taskRepository) GetTaskByUserID(userID uint) ([]Task, error) {
 	var tasks []Task
-	if err := r.db.Find(&tasks).Error; err != nil {
-		return []Task{}, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("Could not get tasks: %v", err))
+	if userID == 0 {
+		if err := r.db.Find(&tasks).Error; err != nil {
+			return []Task{}, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("Could not get tasks: %v", err))
+		}
+	} else {
+		if err := r.db.Where("user_id = ?", userID).Find(&tasks).Error; err != nil {
+			return []Task{}, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("Could not get tasks: %v", err))
+		}
 	}
 	return tasks, nil
 }

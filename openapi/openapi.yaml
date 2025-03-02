@@ -8,6 +8,13 @@ paths:
       summary: Get all tasks
       tags:
         - tasks
+      requestBody:
+        description: The user id to get task
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
       responses:
         '200':
           description: A list of tasks
@@ -157,6 +164,9 @@ components:
         updated_at:
           type: string
           format: date-time
+        user_id:
+          type: integer
+          format: uint
     User:
       type: object
       properties:
